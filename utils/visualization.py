@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 
+FONT_SCALE = 0.9
+FONT_THICKNESS = 2
+FONT = cv2.FONT_HERSHEY_SIMPLEX
+
 def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30):
     frame_count = 0
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
@@ -49,13 +53,30 @@ def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30
 
                 if frame_count >= jump_data[id]["launch_frame"] and frame_count <= jump_data[id]["landing_frame"]:
                     h = (v_0 * (current_time - t_0) - 0.5 * g * (current_time - t_0) ** 2)*100     
-                    text = f"ID: {id}, Height: {h:.2f} cm, Launch velocity: {v_0:.2f} m/s"
+                    text = f"ID: {id}\nHeight: {h:.2f} cm\nLaunch speed: {v_0:.2f} m/s"
                     if str(frame_count) in keypoints_data[str(id)]:
                         box = keypoints_data[str(id)][str(frame_count)]["box"]
                         keypoints = keypoints_data[str(id)][str(frame_count)]["keypoints"]
                         box = [int(b) for b in box]
                         cv2.rectangle(frame, (box[0], box[1]), (box[2], box[3]), (255, 0, 0), 2)
-                        cv2.putText(frame, text, (box[0], box[1] - 10), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 2)
+
+                        box_center_y = (box[1] + box[3]) // 2
+                        lines = text.split('\n')
+                        line_spacing = 5
+                        text_width, text_height = 0, 0
+
+                        for line in lines:
+                            text_size = cv2.getTextSize(line, FONT, FONT_SCALE, FONT_THICKNESS)[0]
+                            text_width = max(text_width, text_size[0])
+                            text_height += text_size[1] + line_spacing
+                        text_height -= line_spacing
+
+                        text_start_x = box[2] + 10
+                        text_start_y = box_center_y - text_height // 2
+                        for i, line in enumerate(lines):
+                            text_size = cv2.getTextSize(line, FONT, FONT_SCALE, FONT_THICKNESS)[0]
+                            cv2.putText(frame, line, (text_start_x, text_start_y), FONT, FONT_SCALE, (255, 255, 255), FONT_THICKNESS)
+                            text_start_y += line_spacing + text_size[1]
 
                         # Draw keypoints with different colors
                         for i, kp in enumerate(keypoints):
@@ -70,8 +91,8 @@ def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30
                                 cv2.line(frame, start_point, end_point, colors[len(skeleton) % len(colors)], 2)  # Use a different color for skeleton lines
                 if frame_count > jump_data[id]["landing_frame"]:
                     h = jump_data[id]["jump_height"]
-                    text = f"ID: {id}, Max Height: {h:.2f} cm, Launch velocity: {v_0:.2f} m/s \n"
-                    cv2.putText(frame, text, (10, 30), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 2)
+                    text = f"ID: {id}, Max Height: {h:.2f} cm, Launch velocity: {v_0:.2f} m/s"
+                    cv2.putText(frame, text, (10, 30), FONT, FONT_SCALE, (255, 255, 255), FONT_THICKNESS)
 
                         
         cv2.imshow("Frame", frame)
