@@ -15,6 +15,7 @@ def calculate_loss_and_params(params, y_coords, time_steps):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore', RankWarning)
             y_coords_array = np.array(y_coords)
+            # replace y_coords_array with a smoothed version of itself
             time_steps_array = np.array(time_steps)
 
             launch_frame = int(np.round(params[0]))
@@ -26,6 +27,20 @@ def calculate_loss_and_params(params, y_coords, time_steps):
             pre_jump = y_coords_array[time_steps_array <= launch_frame]
             during_jump = y_coords_array[(time_steps_array > launch_frame) & (time_steps_array <= landing_frame)]
             post_jump = y_coords_array[time_steps_array > landing_frame]
+            if pre_jump.size == 0 or during_jump.size == 0 or post_jump.size == 0:
+                return float('inf'), None
+            # remove outliers from pre_jump, during_jump and post_jump
+            pre_jump_mean = np.mean(pre_jump)
+            pre_jump_std = np.std(pre_jump)
+            pre_jump = pre_jump[abs(pre_jump - pre_jump_mean) < 3 * pre_jump_std]
+
+            during_jump_mean = np.mean(during_jump)
+            during_jump_std = np.std(during_jump)
+            during_jump = during_jump[abs(during_jump - during_jump_mean) < 3 * during_jump_std]
+
+            post_jump_mean = np.mean(post_jump)
+            post_jump_std = np.std(post_jump)
+            post_jump = post_jump[abs(post_jump - post_jump_mean) < 3 * post_jump_std]
 
             time_pre_jump = time_steps_array[time_steps_array <= launch_frame]
             time_during_jump = time_steps_array[(time_steps_array > launch_frame) & (time_steps_array <= landing_frame)]
