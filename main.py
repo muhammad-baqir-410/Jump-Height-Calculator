@@ -4,7 +4,7 @@ from utils.visualization import show_jump_info_on_video
 from keypoints.data_loader import load_keypoints_data
 from keypoints.yolo import get_key_points
 
-video_path = "videos/jump2.mp4"
+video_path = "videos/test1.mp4"
 video = cv2.VideoCapture(video_path)
 fps = video.get(cv2.CAP_PROP_FPS)
 

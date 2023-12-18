@@ -1,6 +1,8 @@
 import numpy as np
 import warnings
 from numpy import RankWarning
+from scipy.signal import find_peaks
+from numpy.polynomial.polynomial import Polynomial
 
 GRAVITY = 9.81
 
@@ -57,6 +59,71 @@ def calculate_loss_and_params(params, y_coords, time_steps):
             return loss, quadratic_params
     except Exception as e:
         return float('inf'), None
+    
+def find_parabolic_curve(signal, window_size=20, threshold=1, find_minimum_peak=True):
+    """
+    Find the start and end points of a concave-up parabolic curve in a signal.
+
+    Parameters:
+    signal (numpy array): The signal in which to find the parabolic curve.
+    window_size (int): The size of the window around the peak or valley for curve fitting.
+    threshold (float): The threshold for deviation from the fitted curve to determine the bounds.
+    find_minimum_peak (bool): If True, finds the curve around the minimum peak (valley); otherwise, the maximum peak.
+
+    Returns:
+    tuple: Start and end points of the parabolic curve.
+    """
+    try:
+        # Validate input
+        if not isinstance(signal, np.ndarray):
+            raise ValueError("Signal must be a numpy array.")
+
+        if window_size <= 0:
+            raise ValueError("Window size must be a positive integer.")
+
+        if threshold <= 0:
+            raise ValueError("Threshold must be a positive number.")
+
+        # Invert the signal if finding minimum peak (valley)
+        processed_signal = -signal if find_minimum_peak else signal
+
+        # Find peaks or valleys based on the processed signal
+        peaks, _ = find_peaks(processed_signal, prominence=30)
+        if len(peaks) == 0:
+            return None, None
+
+        # Choose the most prominent peak or valley
+        target_peak = peaks[np.argmin(signal[peaks])] if find_minimum_peak else peaks[np.argmax(signal[peaks])]
+
+        # Define the window for curve fitting
+        start = max(target_peak - window_size, 0)
+        end = min(target_peak + window_size, len(signal))
+
+        # Fit a parabola in the window
+        x = np.arange(start, end)
+        y = signal[start:end]
+        p = Polynomial.fit(x, y, 2)
+
+        # Find the start and end points of the parabola
+        deviation = np.abs(p(x) - y)
+        indices_over_threshold = np.where(deviation > threshold)[0]
+
+        if len(indices_over_threshold) > 0:
+            start_of_parabola = indices_over_threshold[0] + start
+            end_of_parabola = indices_over_threshold[-1] + start
+        else:
+            start_of_parabola, end_of_parabola = start, end
+
+        return start_of_parabola, end_of_parabola
+
+    except ValueError as e:
+        # Handle the value errors and return a message
+        return f"Error: {str(e)}"
+    except Exception as e:
+        # Handle any other exceptions
+        return f"An unexpected error occurred: {str(e)}"
+
+
 
 def calculate_jump_height(total_air_time):
     jump_height = GRAVITY * total_air_time**2 / 8

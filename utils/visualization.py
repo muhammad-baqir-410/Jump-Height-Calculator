@@ -91,8 +91,23 @@ def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30
                                 cv2.line(frame, start_point, end_point, colors[len(skeleton) % len(colors)], 2)  # Use a different color for skeleton lines
                 if frame_count > jump_data[id]["landing_frame"]:
                     h = jump_data[id]["jump_height"]
-                    text = f"ID: {id}, Max Height: {h:.2f} cm, Launch velocity: {v_0:.2f} m/s"
-                    cv2.putText(frame, text, (10, 30), FONT, FONT_SCALE, (255, 255, 255), FONT_THICKNESS)
+                    text = f"ID: {id}, Max Height: {h:.2f} cm, Launch velocity: {v_0:.2f} m/s \n"
+                    # put multi-line text on top of the frame by splitting the text on newline character
+                    lines = text.split('\n')
+                    line_spacing = 5
+                    text_width, text_height = 0, 0
+                    for line in lines:
+                        text_size = cv2.getTextSize(line, FONT, FONT_SCALE, FONT_THICKNESS)[0]
+                        text_width = max(text_width, text_size[0])
+                        text_height += text_size[1] + line_spacing
+                    text_height -= line_spacing
+                    text_start_x = 10
+                    text_start_y = 30
+                    for i, line in enumerate(lines):
+                        text_size = cv2.getTextSize(line, FONT, FONT_SCALE, FONT_THICKNESS)[0]
+                        cv2.putText(frame, line, (text_start_x, text_start_y), FONT, FONT_SCALE, (255, 255, 255), FONT_THICKNESS)
+                        text_start_y += line_spacing + text_size[1]
+
 
                         
         cv2.imshow("Frame", frame)

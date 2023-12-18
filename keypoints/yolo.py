@@ -4,7 +4,7 @@ model = YOLO("yolov8n-pose.pt")
 
 def get_key_points(path=""):
     print("***Processing Video***")
-    results = model.track(source = path, save=False, show=False, tracker="bytetrack.yaml", stream=True, verbose=False)
+    results = model.track(source = path, save=False, show=True, tracker="bytetrack.yaml", stream=True, verbose=False)
 
     # dictionary to store keypoints data against each id for all frames
     keypoints_data = {}
