@@ -1,14 +1,37 @@
 import cv2
-import numpy as np
+import os
 
 FONT_SCALE = 0.9
 FONT_THICKNESS = 2
 FONT = cv2.FONT_HERSHEY_SIMPLEX
 
-def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30):
+def save_and_show_output(video_path, video, jump_data, keypoints_data, show=True, fps=30):
+    """
+    The function `save_and_show_output` saves a video with annotated keypoints and jump data, and
+    optionally displays the video while saving.
+    
+    :param video_path: The path to the input video file
+    :param video: The `video` parameter is the input video file that you want to process and save the
+    output for. It should be a video file object that you can read frames from
+    :param jump_data: The `jump_data` parameter is a dictionary that contains information about the
+    jumps. Each key in the dictionary represents a unique identifier for a jump, and the corresponding
+    value is another dictionary that contains the following information:
+    :param keypoints_data: The `keypoints_data` parameter is a dictionary that contains the keypoints
+    data for each frame of the video. The dictionary has the following structure:
+    :param show: A boolean indicating whether to display the video frames while saving and showing the
+    output. If set to True, the frames will be displayed; if set to False, the frames will not be
+    displayed, defaults to True (optional)
+    :param fps: The `fps` parameter specifies the frames per second of the output video. It determines
+    how many frames are displayed per second in the video, defaults to 30 (optional)
+    """
     frame_count = 0
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-    out = cv2.VideoWriter(video_path.replace(".mp4", "_output.mp4"), fourcc, fps, (int(video.get(3)), int(video.get(4))))
+    video_file_name = video_path.split("/")[-1]
+    output_dir = "output_videos"
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    output_video_path = os.path.join(output_dir, video_file_name)
+    out = cv2.VideoWriter(output_video_path, fourcc, fps, (int(video.get(3)), int(video.get(4))))
 
     # Define colors for each keypoint
     colors = [
@@ -102,18 +125,18 @@ def show_jump_info_on_video(video_path, video, jump_data, keypoints_data, fps=30
                         text_height += text_size[1] + line_spacing
                     text_height -= line_spacing
                     text_start_x = 10
-                    text_start_y = 30
+                    text_start_y = 80
                     for i, line in enumerate(lines):
                         text_size = cv2.getTextSize(line, FONT, FONT_SCALE, FONT_THICKNESS)[0]
                         cv2.putText(frame, line, (text_start_x, text_start_y), FONT, FONT_SCALE, (255, 255, 255), FONT_THICKNESS)
                         text_start_y += line_spacing + text_size[1]
 
 
-                        
-        cv2.imshow("Frame", frame)
+        if show:                
+            cv2.imshow("Frame", frame)
+            if cv2.waitKey(1) == ord('q'):
+                break
         out.write(frame)
-        if cv2.waitKey(1) == ord('q'):
-            break
     video.release()
     out.release()
     cv2.destroyAllWindows()
