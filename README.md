@@ -4,6 +4,7 @@
 This project is designed to calculate the jump height of individuals using video analysis. By leveraging the YOLOv8 algorithm to detect and track keypoints (specifically, hips and ankles) of a person jumping, the project calculates the jump height based on the trajectory of these keypoints. This tool is particularly useful in sports science, physical education, and personal fitness to measure and analyze jump performance.
 
 [![Watch the video](assets/demo1.webp)](https://youtu.be/aGXHc3w0bhQ "Watch the video")
+[![Watch the video](assets/demo2.png)](https://youtube.com/shorts/A1VRPOEz-gU?feature=share "Watch the video")
 
 ## Features
 - Uses YOLOv8 for accurate keypoint detection.
